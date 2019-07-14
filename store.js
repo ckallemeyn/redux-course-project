@@ -199,4 +199,17 @@ store.dispatch(addGoalAction({
   name: 'Lose 20 pounds'
 }));
 
-store.dispatch(removeGoalAction(0))  
+store.dispatch(removeGoalAction(0))
+
+// DOM code
+function addTodo() {
+  const input = document.getElementById('todo');
+  const name = input.value
+  input.value = ''
+}
+
+function addGoal() {
+  const input = document.getElementById('goal');
+  const name = input.value
+  input.value = ''
+}
