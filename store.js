@@ -1,42 +1,3 @@
-
-
-
-// an action is an event that will update the store. Example:
-// {
-//   type: 'ADD_TODO',
-//   todo: {
-//     id: 0,
-//     name: 'Learn Redux',
-//     complete: false,
-//   }
-// }
-
-// {
-//   type: 'REMOVE_TODO',
-//   id: 0,
-// }
-
-// {
-//   type: 'TOGGLE_TODO',
-//   id: 0,
-// }
-
-// {
-//   type: 'ADD_GOAL',
-//   goal: {
-//     id: 0,
-//     name: 'Run a Marathon'
-//   }
-// }
-
-// {
-//   type: 'REMOVE_GOAL',
-//   goal: {
-//     id: 0,
-//     name: 'Run a Marathon'
-//   }
-// }
-
 /*
 Characteristics of a Pure Function
 1. They always return the same result if the same arguments are passied in.
@@ -47,77 +8,6 @@ Characteristics of a Pure Function
 function generateId () {
   return Math.random().toString(36).substring(2) + (new Date()).getTime().toString(36);
 }
-
-const checker = (store) => (next) => (action) => {
-  if (
-    action.type === ADD_TODO &&
-    action.todo.name.toLowerCase().indexOf('bitcoin') !== -1
-  ) {
-    return alert("Nope. That's a bad idea.")
-  }
-  if (
-    action.type === ADD_GOAL &&
-    action.goal.name.toLowerCase().indexOf('bitcoin') !== -1
-  ) {
-    return alert("Nope. That's a bad idea.")
-  }
-  return next(action)
-}
-}
-
-// ES5 middleware
-// function checker(store) {
-//   return function(next) {
-//     return function(action) {
-//       if (
-//         action.type === ADD_TODO && action.todo.name.toLowerCase().indexOf('bitcoin') !== -1
-//       ) {
-//         return alert('DON\'T DO IT!');
-//       }
-
-//       if (
-//         action.type === ADD_GOAL && action.goal.name.toLowerCase().indexOf('bitcoin') !== -1
-//         ) {
-//         return alert('DON\'T DO IT!');
-//       }
-
-//       return next(action);
-//     }
-//   }
-// }
-
-// App Code
-// -------Reducers--------
-function todos(state = [], action) {
-  switch(action.type) {
-    case 'ADD_TODO':
-      return state.concat([action.todo]);
-    case 'REMOVE_TODO':
-      return state.filter((todo) => todo.id !== action.id);
-    case 'TOGGLE_TODO':
-      return state.map((todo) => (action.id !== todo.id) ? todo : Object.assign({}, todo, {complete: !todo.complete}));
-    default:
-      return state;
-  }
-}
-
-function goals(state = [], action) {
-  switch(action.type) {
-    case 'ADD_GOAL' :
-      return state.concat([action.goal]);
-    case 'REMOVE_GOAL' :
-      return state.filter((goal) => goal.id !== action.id);
-    default:
-      return state;
-  }
-}
-
-// function app(state = {}, action) {
-//   return {
-//     todos: todos(state.todos, action),
-//     goals: goals(state.goals, action)
-//   };
-// }
 
 const ADD_TODO = 'ADD_TODO';
 const REMOVE_TODO = 'REMOVE_TODO';
@@ -168,10 +58,61 @@ function toggleGoalAction(id) {
   }
 }
 
+const checker = (store) => (next) => (action) => {
+  if (
+    action.type === ADD_TODO &&
+    action.todo.name.toLowerCase().indexOf('bitcoin') !== -1
+  ) {
+    return alert("Nope. That's a bad idea.")
+  }
+  if (
+    action.type === ADD_GOAL &&
+    action.goal.name.toLowerCase().indexOf('bitcoin') !== -1
+  ) {
+    return alert("Nope. That's a bad idea.")
+  }
+  return next(action)
+}
+
+const logger = (store) => (next) => (action) => {
+  console.group(action.type)
+  console.log('The action: ', action);
+  const result = next(action);
+  console.log('The new state: ',store.getState());
+  console.groupEnd();
+  return result;
+}
+
+// App Code
+// -------Reducers--------
+function todos(state = [], action) {
+  switch(action.type) {
+    case 'ADD_TODO':
+      return state.concat([action.todo]);
+    case 'REMOVE_TODO':
+      return state.filter((todo) => todo.id !== action.id);
+    case 'TOGGLE_TODO':
+      return state.map((todo) => (action.id !== todo.id) ? todo : Object.assign({}, todo, {complete: !todo.complete}));
+    default:
+      return state;
+  }
+}
+
+function goals(state = [], action) {
+  switch(action.type) {
+    case 'ADD_GOAL' :
+      return state.concat([action.goal]);
+    case 'REMOVE_GOAL' :
+      return state.filter((goal) => goal.id !== action.id);
+    default:
+      return state;
+  }
+}
+
 const store = Redux.createStore(Redux.combineReducers({
   todos,
   goals,
-}), Redux.applyMiddleware(checker));
+}), Redux.applyMiddleware(checker, logger));
 
 store.subscribe(() => {
   const { goals, todos } = store.getState();
