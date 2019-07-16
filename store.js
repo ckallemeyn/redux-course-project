@@ -2,40 +2,40 @@
 
 
 // an action is an event that will update the store. Example:
-{
-  type: 'ADD_TODO',
-  todo: {
-    id: 0,
-    name: 'Learn Redux',
-    complete: false,
-  }
-}
+// {
+//   type: 'ADD_TODO',
+//   todo: {
+//     id: 0,
+//     name: 'Learn Redux',
+//     complete: false,
+//   }
+// }
 
-{
-  type: 'REMOVE_TODO',
-  id: 0,
-}
+// {
+//   type: 'REMOVE_TODO',
+//   id: 0,
+// }
 
-{
-  type: 'TOGGLE_TODO',
-  id: 0,
-}
+// {
+//   type: 'TOGGLE_TODO',
+//   id: 0,
+// }
 
-{
-  type: 'ADD_GOAL',
-  goal: {
-    id: 0,
-    name: 'Run a Marathon'
-  }
-}
+// {
+//   type: 'ADD_GOAL',
+//   goal: {
+//     id: 0,
+//     name: 'Run a Marathon'
+//   }
+// }
 
-{
-  type: 'REMOVE_GOAL',
-  goal: {
-    id: 0,
-    name: 'Run a Marathon'
-  }
-}
+// {
+//   type: 'REMOVE_GOAL',
+//   goal: {
+//     id: 0,
+//     name: 'Run a Marathon'
+//   }
+// }
 
 /*
 Characteristics of a Pure Function
@@ -44,6 +44,9 @@ Characteristics of a Pure Function
 3. Never produce any side effects(i.e. no AJAX requests, doesn't modify state)
 */
 
+function generateId () {
+  return Math.random().toString(36).substring(2) + (new Date()).getTime().toString(36);
+}
 
 //------The Store------
 // Library Code
@@ -165,51 +168,101 @@ function toggleGoalAction(id) {
 
 const store = createStore(app)
 
-store.subscribe(() => console.log('The new state is: ', store.getState()));
+store.subscribe(() => {
+  const { goals, todos } = store.getState();
 
-store.dispatch(addTodoAction({
-   id: 0,
-   name: 'Make Dinner',
-   complete: false,
-}));
+  document.getElementById('goals').innerHTML = '';
+  document.getElementById('todos').innerHTML = '';
+  todos.forEach(addTodoToDom)
+  goals.forEach(addGoalToDom)
+  console.log('goals', goals);
+  console.log('todos', todos);
+});
 
-store.dispatch(addTodoAction({
-  id: 1,
-  name: 'exercise',
-  complete: true,
-}));
 
-store.dispatch(addTodoAction({
-  id: 2,
-  name: 'Wash dishes',
-  complete: true,
-}));
+// store.dispatch(addTodoAction({
+//   id: 0,
+//   name: 'Make Dinner',
+//   complete: false,
+// }));
 
-store.dispatch(removeTodoAction(1))
+// store.dispatch(addTodoAction({
+//   id: 1,
+//   name: 'exercise',
+//   complete: true,
+// }));
 
-store.dispatch(toggleTodoAction(0))
+// store.dispatch(addTodoAction({
+//   id: 2,
+//   name: 'Wash dishes',
+//   complete: true,
+// }));
 
-store.dispatch(addGoalAction({
-  id: 0,
-  name: 'Learn Redux'
-}));
+// store.dispatch(removeTodoAction(1))
 
-store.dispatch(addGoalAction({
-  id: 1,
-  name: 'Lose 20 pounds'
-}));
+// store.dispatch(toggleTodoAction(0))
 
-store.dispatch(removeGoalAction(0))
+// store.dispatch(addGoalAction({
+//   id: 0,
+//   name: 'Learn Redux'
+// }));
+
+// store.dispatch(addGoalAction({
+//   id: 1,
+//   name: 'Lose 20 pounds'
+// }));
+
+// store.dispatch(removeGoalAction(0))
 
 // DOM code
 function addTodo() {
   const input = document.getElementById('todo');
   const name = input.value
   input.value = ''
+
+  store.dispatch(addTodoAction({
+    id: generateId(),
+    name,
+    complete: false,
+  }));
 }
 
 function addGoal() {
   const input = document.getElementById('goal');
   const name = input.value
   input.value = ''
+
+  store.dispatch(addGoalAction({
+    id: generateId(),
+    name,
+  }));
+}
+
+  document.getElementById('todoBtn')
+    .addEventListener('click', addTodo);
+
+  document.getElementById('goalBtn')
+    .addEventListener('click', addGoal);
+
+function addTodoToDom(todo) {
+  const node = document.createElement('li')
+  const text = document.createTextNode(todo.name);
+  node.appendChild(text);
+  node.style.textDecoration = todo.complete ? 'line-through' : 'none';
+  node.addEventListener('click', () => {
+    store.dispatch(toggleTodoAction(todo.id));
+  })
+
+  document.getElementById('todos')
+    .appendChild(node);
+}
+
+function addGoalToDom(goal) {
+  const node = document.createElement('li');
+  const text = document.createTextNode(goal.name);
+  node.appendChild(text);
+
+
+  document.getElementById('goals')
+    .appendChild(node);
 }
