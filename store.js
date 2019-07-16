@@ -48,41 +48,43 @@ function generateId () {
   return Math.random().toString(36).substring(2) + (new Date()).getTime().toString(36);
 }
 
-//------The Store------
-// Library Code
-function createStore(reducer) {
-// 1. The State
-// 2. Get the state.
-// 3. Listen to changes on the state.
-// 4. Update the state
-let state
-//create an array of callback funcs
-let listeners = []
-
-const getState = () => state;
-
-const subscribe = (listener) => {
-  listeners.push(listener)
-  return () => {
-    listeners = listeners.filter((l) => l !== listener)
+const checker = (store) => (next) => (action) => {
+  if (
+    action.type === ADD_TODO &&
+    action.todo.name.toLowerCase().indexOf('bitcoin') !== -1
+  ) {
+    return alert("Nope. That's a bad idea.")
   }
-}
-
-const dispatch = (action) => {
-  // call todos (reducer)
-  state = reducer(state, action)
-
-  // iterate through listeners and invoke them
-  listeners.forEach((listener) => listener())
-}
-
-  return {
-    getState,
-    subscribe,
-    dispatch,
+  if (
+    action.type === ADD_GOAL &&
+    action.goal.name.toLowerCase().indexOf('bitcoin') !== -1
+  ) {
+    return alert("Nope. That's a bad idea.")
   }
+  return next(action)
 }
-// -----END OF STORE-----
+}
+
+// ES5 middleware
+// function checker(store) {
+//   return function(next) {
+//     return function(action) {
+//       if (
+//         action.type === ADD_TODO && action.todo.name.toLowerCase().indexOf('bitcoin') !== -1
+//       ) {
+//         return alert('DON\'T DO IT!');
+//       }
+
+//       if (
+//         action.type === ADD_GOAL && action.goal.name.toLowerCase().indexOf('bitcoin') !== -1
+//         ) {
+//         return alert('DON\'T DO IT!');
+//       }
+
+//       return next(action);
+//     }
+//   }
+// }
 
 // App Code
 // -------Reducers--------
@@ -110,12 +112,12 @@ function goals(state = [], action) {
   }
 }
 
-function app(state = {}, action) {
-  return {
-    todos: todos(state.todos, action),
-    goals: goals(state.goals, action)
-  };
-}
+// function app(state = {}, action) {
+//   return {
+//     todos: todos(state.todos, action),
+//     goals: goals(state.goals, action)
+//   };
+// }
 
 const ADD_TODO = 'ADD_TODO';
 const REMOVE_TODO = 'REMOVE_TODO';
@@ -166,7 +168,10 @@ function toggleGoalAction(id) {
   }
 }
 
-const store = createStore(app)
+const store = Redux.createStore(Redux.combineReducers({
+  todos,
+  goals,
+}), Redux.applyMiddleware(checker));
 
 store.subscribe(() => {
   const { goals, todos } = store.getState();
@@ -180,41 +185,16 @@ store.subscribe(() => {
 });
 
 
-// store.dispatch(addTodoAction({
-//   id: 0,
-//   name: 'Make Dinner',
-//   complete: false,
-// }));
-
-// store.dispatch(addTodoAction({
-//   id: 1,
-//   name: 'exercise',
-//   complete: true,
-// }));
-
-// store.dispatch(addTodoAction({
-//   id: 2,
-//   name: 'Wash dishes',
-//   complete: true,
-// }));
-
-// store.dispatch(removeTodoAction(1))
-
-// store.dispatch(toggleTodoAction(0))
-
-// store.dispatch(addGoalAction({
-//   id: 0,
-//   name: 'Learn Redux'
-// }));
-
-// store.dispatch(addGoalAction({
-//   id: 1,
-//   name: 'Lose 20 pounds'
-// }));
-
-// store.dispatch(removeGoalAction(0))
-
 // DOM code
+function createRemoveButton(onClick) {
+  const removeBtn = document.createElement('button');
+  removeBtn.innerHTML = 'X';
+  removeBtn.addEventListener('click', onClick);
+
+  return removeBtn;
+}
+
+
 function addTodo() {
   const input = document.getElementById('todo');
   const name = input.value
@@ -247,7 +227,12 @@ function addGoal() {
 function addTodoToDom(todo) {
   const node = document.createElement('li')
   const text = document.createTextNode(todo.name);
+
+  const removeBtn = createRemoveButton(() => {
+    store.dispatch(removeTodoAction(todo.id))
+  })
   node.appendChild(text);
+  node.appendChild(removeBtn);
   node.style.textDecoration = todo.complete ? 'line-through' : 'none';
   node.addEventListener('click', () => {
     store.dispatch(toggleTodoAction(todo.id));
@@ -260,8 +245,12 @@ function addTodoToDom(todo) {
 function addGoalToDom(goal) {
   const node = document.createElement('li');
   const text = document.createTextNode(goal.name);
-  node.appendChild(text);
+  const removeBtn = createRemoveButton(() => {
+    store.dispatch(removeGoalAction(goal.id));
+  });
 
+  node.appendChild(text);
+  node.appendChild(removeBtn);
 
   document.getElementById('goals')
     .appendChild(node);
