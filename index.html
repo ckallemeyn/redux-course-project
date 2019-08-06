@@ -221,7 +221,7 @@
 
     class Todos extends React.Component {
       addItem = (e) => {
-        e.preventDefault()
+        e.preventDefault();
 
         this.props.dispatch(handleAddTodo(
           this.input.value,
